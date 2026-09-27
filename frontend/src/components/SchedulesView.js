@@ -224,6 +224,9 @@ export default function SchedulesView({ t, openAuthModal }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 dark:bg-slate-800/80 dark:text-slate-400 mb-1.5">
+            Avanzado
+          </span>
           <h2 className="text-xl font-bold dark:text-white text-slate-900 flex items-center gap-2">
             <Calendar className="w-5 h-5 text-[#38BDF8]" />
             <span>Automatizaciones Programadas (Scheduled Cloud Runs)</span>

@@ -8,8 +8,8 @@ import {
   Webhook,
   Cloud,
   History as HistoryIcon,
-  CalendarClock,
-  ShieldCheck
+  Sliders,
+  ArrowRight
 } from "lucide-react";
 import { AuthProvider } from "./context/AuthContext";
 import { UIProvider, useUI } from "./context/UIContext";
@@ -35,7 +35,6 @@ import Landing from "./components/Landing";
 import Login from "./components/Login";
 import ActivateAccess from "./components/ActivateAccess";
 import PageHeader from "./components/dashboard/PageHeader";
-import MetricCard from "./components/dashboard/MetricCard";
 import QuickActionCard from "./components/dashboard/QuickActionCard";
 import RecentActivityList from "./components/dashboard/RecentActivityList";
 import SecondaryPanel from "./components/dashboard/SecondaryPanel";
@@ -101,30 +100,64 @@ export function CleanSheetApp() {
     }
   };
 
+  // "New cleaning" is a distinct nav action from "Dashboard": it always jumps to
+  // the clean tab AND clears any in-progress file, landing straight on the upload
+  // hero instead of wherever the dashboard/clean flow currently sits.
+  const startNewCleaning = () => {
+    setCurrentFile(null);
+    setAnalysisData(null);
+    setActiveTab("clean");
+  };
+
   return (
     <div
       data-testid="app-root-container"
       className="min-h-screen flex flex-col font-sans transition-colors duration-200 dark:bg-[#080D18] bg-slate-50 text-slate-900 dark:text-slate-100 selection:bg-[#38BDF8]/30 selection:text-white"
     >
       <Header t={t} />
-      <MobileWorkspaceNav t={t} activeTab={activeTab} setActiveTab={setActiveTab} />
+      <MobileWorkspaceNav t={t} activeTab={activeTab} setActiveTab={setActiveTab} onNewCleaning={startNewCleaning} />
 
       <div className="flex min-h-0 flex-1">
-        <WorkspaceSidebar t={t} activeTab={activeTab} setActiveTab={setActiveTab} />
+        <WorkspaceSidebar t={t} activeTab={activeTab} setActiveTab={setActiveTab} onNewCleaning={startNewCleaning} />
         <main className="min-w-0 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {activeTab === "clean" && (
           <>
             {/* Operational Dashboard Overview (default landing state on /app) */}
             {!currentFile ? (
-              <div className="space-y-8">
+              <div className="space-y-10">
                 <PageHeader
                   title={t.brand_name}
                   subtitle={t.subtitle}
                   status={t.dashboard.status_ready}
                 />
 
-                {/* Overview row: real counts derived from already-fetched API data; a
-                    metric is simply omitted when its backing fetch failed. */}
+                {/* 1. Primary action: dominant, unmistakable, first thing seen on the page. */}
+                <div
+                  data-testid="dashboard-hero-panel"
+                  className="relative overflow-hidden rounded-2xl border border-[#3B82F6]/30 bg-gradient-to-br from-[#3B82F6]/10 via-white to-white dark:from-[#3B82F6]/15 dark:via-[#0B1220] dark:to-[#0B1220] p-5 sm:p-7 shadow-sm space-y-4"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#3B82F6]/15 text-[#0284C7] dark:text-[#38BDF8] border border-[#3B82F6]/30">
+                      {t.dashboard.hero_eyebrow}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-[#3B82F6] flex items-center justify-center shrink-0 shadow-md shadow-[#3B82F6]/30">
+                      <UploadCloud className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-extrabold dark:text-white text-slate-950">
+                        {t.dashboard.hero_title}
+                      </h2>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 max-w-2xl mt-0.5">
+                        {t.dashboard.hero_subtitle}
+                      </p>
+                    </div>
+                  </div>
+                  <DropZone t={t} onAnalysisComplete={handleAnalysisComplete} />
+                </div>
+
+                {/* 3. Minimal operational summary: one condensed strip instead of competing cards. */}
                 {(() => {
                   const d = t.dashboard;
                   const metrics = [
@@ -151,12 +184,6 @@ export function CleanSheetApp() {
                       label: d.metric_connectors,
                       value: overview.connectors.length,
                       testId: "metric-connectors"
-                    },
-                    overview.schedules !== null && {
-                      icon: CalendarClock,
-                      label: d.metric_schedules,
-                      value: overview.schedules.length,
-                      testId: "metric-schedules"
                     }
                   ].filter(Boolean);
 
@@ -165,32 +192,32 @@ export function CleanSheetApp() {
                   return (
                     <div
                       data-testid="dashboard-metrics-row"
-                      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+                      className="rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-[#0B1220] bg-white shadow-sm grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0 divide-slate-100 dark:divide-slate-800/80"
                     >
                       {metrics.map((m) => (
-                        <MetricCard key={m.testId} {...m} />
+                        <div key={m.testId} data-testid={m.testId} className="flex items-center gap-2.5 px-4 py-3 min-w-0">
+                          <m.icon className="w-4 h-4 text-[#38BDF8] shrink-0" />
+                          <div className="min-w-0">
+                            <div className="text-base font-bold dark:text-white text-slate-900 leading-none tabular-nums">
+                              {m.value}
+                            </div>
+                            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate">{m.label}</div>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   );
                 })()}
 
-                {/* Quick actions: wired to the existing tab-switch handler, no new logic */}
+                {/* 2. Secondary actions: clearly less prominent than the hero above. */}
                 <div className="space-y-3">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {t.dashboard.quick_actions_title}
                   </h2>
                   <div
                     data-testid="dashboard-quick-actions"
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3"
                   >
-                    <QuickActionCard
-                      testId="quick-action-clean"
-                      icon={UploadCloud}
-                      label={t.dashboard.action_clean_label}
-                      description={t.dashboard.action_clean_desc}
-                      active
-                      onClick={() => setActiveTab("clean")}
-                    />
                     <QuickActionCard
                       testId="quick-action-recipes"
                       icon={PlayCircle}
@@ -222,9 +249,9 @@ export function CleanSheetApp() {
                   </div>
                 </div>
 
-                {/* Main content: recent activity + compact upload workspace */}
+                {/* 4 + 5. Recent activity, and a compact module-shortcuts list (not a wall of tiles). */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                  <div className="lg:col-span-1">
+                  <div className="lg:col-span-2">
                     <RecentActivityList
                       testId="dashboard-recent-activity"
                       title={t.dashboard.recent_activity_title}
@@ -255,98 +282,100 @@ export function CleanSheetApp() {
                     </button>
                   </div>
 
-                  {/* Compact upload panel: same DropZone/analysis pipeline, shrunk into the workspace layout */}
                   <div
-                    data-testid="dashboard-workspace-panel"
-                    className="lg:col-span-2 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-[#0B1220] bg-white space-y-3"
+                    data-testid="dashboard-explore-modules"
+                    className="lg:col-span-1 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-[#0B1220] bg-white overflow-hidden"
                   >
-                    <div>
-                      <h3 className="text-sm font-bold dark:text-white text-slate-900">
-                        {t.dashboard.workspace_title}
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {t.dashboard.explore_title}
                       </h3>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {t.dashboard.workspace_subtitle}
-                      </p>
                     </div>
-                    <DropZone t={t} onAnalysisComplete={handleAnalysisComplete} />
+                    <ul className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                      {[
+                        { id: "recipes", icon: PlayCircle, label: t.dashboard.explore_recipes },
+                        { id: "batch", icon: Layers, label: t.dashboard.explore_batch },
+                        { id: "history", icon: HistoryIcon, label: t.dashboard.explore_history }
+                      ].map((m) => (
+                        <li key={m.id}>
+                          <button
+                            type="button"
+                            data-testid={`explore-module-${m.id}`}
+                            onClick={() => setActiveTab(m.id)}
+                            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer"
+                          >
+                            <span className="flex items-center gap-2 min-w-0">
+                              <m.icon className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
+                              <span className="truncate">{m.label}</span>
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
 
-                {/* Secondary: compact panels reusing already-fetched connectors/schedules data */}
+                {/* 6. Advanced / integrations: grouped, muted, clearly secondary to the primary flow. */}
                 <div className="space-y-3">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    {t.dashboard.secondary_title}
-                  </h2>
+                  <div>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      {t.dashboard.advanced_title}
+                    </h2>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                      {t.dashboard.advanced_subtitle}
+                    </p>
+                  </div>
                   <div
-                    data-testid="dashboard-secondary-row"
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                    data-testid="dashboard-advanced-row"
+                    className="grid grid-cols-1 sm:grid-cols-3 gap-3"
                   >
                     <SecondaryPanel
-                      testId="secondary-connectors"
+                      testId="advanced-stream"
+                      icon={Sliders}
+                      title={t.dashboard.advanced_stream_title}
+                      action={
+                        <button
+                          onClick={() => setActiveTab("stream")}
+                          className="text-[10px] font-semibold text-[#38BDF8] hover:underline cursor-pointer"
+                        >
+                          {t.dashboard.advanced_cta}
+                        </button>
+                      }
+                    >
+                      <p>{t.dashboard.advanced_stream_desc}</p>
+                    </SecondaryPanel>
+
+                    <SecondaryPanel
+                      testId="advanced-automations"
+                      icon={Webhook}
+                      title={t.dashboard.advanced_automations_title}
+                      action={
+                        <button
+                          onClick={() => setActiveTab("automations")}
+                          className="text-[10px] font-semibold text-[#38BDF8] hover:underline cursor-pointer"
+                        >
+                          {t.dashboard.advanced_cta}
+                        </button>
+                      }
+                    >
+                      <p>{t.dashboard.advanced_automations_desc}</p>
+                    </SecondaryPanel>
+
+                    <SecondaryPanel
+                      testId="advanced-connectors"
                       icon={Cloud}
-                      title={t.dashboard.secondary_connectors_title}
+                      title={t.dashboard.advanced_connectors_title}
                       action={
                         <button
                           onClick={() => setActiveTab("connectors")}
                           className="text-[10px] font-semibold text-[#38BDF8] hover:underline cursor-pointer"
                         >
-                          {t.dashboard.secondary_connectors_cta}
+                          {t.dashboard.advanced_cta}
                         </button>
                       }
                     >
-                      {overview.connectors === null || overview.connectors.length === 0 ? (
-                        <p>{t.dashboard.secondary_connectors_empty}</p>
-                      ) : (
-                        <ul className="space-y-1">
-                          {overview.connectors.slice(0, 3).map((c) => (
-                            <li key={c.id} className="truncate">
-                              {c.name || c.bucket || `Conector #${c.id}`}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </SecondaryPanel>
-
-                    <SecondaryPanel
-                      testId="secondary-schedules"
-                      icon={CalendarClock}
-                      title={t.dashboard.secondary_schedules_title}
-                      action={
-                        <button
-                          onClick={() => setActiveTab("schedules")}
-                          className="text-[10px] font-semibold text-[#38BDF8] hover:underline cursor-pointer"
-                        >
-                          {t.dashboard.secondary_schedules_cta}
-                        </button>
-                      }
-                    >
-                      {overview.schedules === null || overview.schedules.length === 0 ? (
-                        <p>{t.dashboard.secondary_schedules_empty}</p>
-                      ) : (
-                        <ul className="space-y-1">
-                          {overview.schedules.slice(0, 3).map((s) => (
-                            <li key={s.id} className="truncate">
-                              {s.name || `Programación #${s.id}`}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </SecondaryPanel>
-
-                    <SecondaryPanel
-                      testId="secondary-audit"
-                      icon={ShieldCheck}
-                      title={t.dashboard.secondary_audit_title}
-                      action={
-                        <button
-                          onClick={() => setActiveTab("history")}
-                          className="text-[10px] font-semibold text-[#38BDF8] hover:underline cursor-pointer"
-                        >
-                          {t.dashboard.secondary_audit_cta}
-                        </button>
-                      }
-                    >
-                      <p>{t.dashboard.secondary_audit_desc}</p>
+                      <p>{t.dashboard.advanced_connectors_desc}</p>
                     </SecondaryPanel>
                   </div>
                 </div>
