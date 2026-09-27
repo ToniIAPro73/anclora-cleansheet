@@ -5,10 +5,12 @@ Revises: 0002_closed_access_whitelist
 Create Date: 2026-09-27
 
 NOT APPLIED TO PRODUCTION AS PART OF THIS CHANGE. CleanSheet's own
-.anclora/PRODUCTION_RUNTIME.md declares PRODUCTION_MIGRATIONS_ALLOWED=false
-and MIGRATION_CONFIRMATION_REQUIRED=true. This migration is prepared and
-reviewed but requires Toni's explicit confirmation before `alembic upgrade`
-is run against the production database.
+.anclora/PRODUCTION_RUNTIME.md declares PRODUCTION_MIGRATIONS_ALLOWED=true,
+scoped exclusively to this revision (0003_add_identity_sub — see the
+"Scoped migration authorization (active)" section of that file), and
+MIGRATION_CONFIRMATION_REQUIRED=true. This migration is prepared and
+reviewed but requires Toni's explicit per-run confirmation before
+`alembic upgrade` is run against the production database.
 
 Purely additive: adds one nullable, unique column. No existing column is
 altered or dropped, so it is backward-compatible with the currently deployed
