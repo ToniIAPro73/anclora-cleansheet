@@ -23,6 +23,12 @@ La característica fundamental que diferencia a CleanSheet es:
 
 ## 3. Ejecución portable
 
+Para desarrollo local, `npm start` desde `frontend/` comprueba si la API está
+disponible y la levanta automáticamente en el puerto 8000 cuando no lo está.
+Usa el runtime configurado en `backend/.env.local` y no ejecuta
+migraciones. Al detener el frontend, también se detiene el backend que haya
+iniciado ese comando.
+
 El backend y el scheduler son procesos independientes y no requieren un daemon de cron,
 una imagen privada ni servicios internos de una herramienta de desarrollo:
 

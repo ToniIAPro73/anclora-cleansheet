@@ -40,12 +40,21 @@ export default function Login() {
       await login(email.trim().toLowerCase(), password);
       navigate("/app");
     } catch (err) {
-      // Generic error message without revealing user existence or enumeration
-      setError(
-        en
-          ? "Invalid email or password. Please verify your credentials."
-          : "Credenciales incorrectas. Comprueba tu correo y contraseña."
-      );
+      // Keep credential failures generic, but distinguish them from an
+      // unreachable API so local/deployed configuration errors are actionable.
+      if (!err.response) {
+        setError(
+          en
+            ? "Unable to connect to the CleanSheet API. Check that the backend is running."
+            : "No se puede conectar con la API de CleanSheet. Comprueba que el backend esté activo."
+        );
+      } else {
+        setError(
+          en
+            ? "Invalid email or password. Please verify your credentials."
+            : "Credenciales incorrectas. Comprueba tu correo y contraseña."
+        );
+      }
     } finally {
       setSubmitting(false);
     }
