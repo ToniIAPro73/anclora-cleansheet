@@ -19,6 +19,13 @@ export default function Login() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Wave 1 pilot: Anclora Identity SSO, fail-closed behind a build-time flag.
+  // When unset, this renders nothing and the existing whitelist/password
+  // login is the only path — same as before this pilot.
+  const anclora_identity_enabled =
+    String(process.env.REACT_APP_ANCLORA_IDENTITY_ENABLED || "").toLowerCase() === "true";
+  const backend_url = process.env.REACT_APP_BACKEND_URL || "";
+
   // If already authenticated, redirect to workspace
   if (!loading && user) {
     return <Navigate to="/app" replace />;
@@ -130,6 +137,27 @@ export default function Login() {
           >
             {submitting ? (en ? "Signing in..." : "Iniciando sesión...") : (en ? "Sign in" : "Iniciar sesión")}
           </button>
+
+          {anclora_identity_enabled && (
+            <div className="mt-3 flex flex-col gap-2">
+              <div className="relative my-1 text-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-700/40" />
+                </div>
+                <span className="relative bg-[#0F172A] dark:bg-[#0F172A] light:bg-white px-2 text-[11px] text-slate-500 uppercase tracking-wider font-mono">
+                  {en ? "Or continue with" : "O continuar con"}
+                </span>
+              </div>
+              <a
+                href={`${backend_url}/api/auth/anclora-identity/login`}
+                data-testid="anclora-identity-login-link"
+                className="flex items-center justify-center gap-2 h-[42px] rounded-[10px] border border-[#38BDF8]/60 bg-[#38BDF8]/10 text-[#38BDF8] text-xs font-medium hover:bg-[#38BDF8]/20"
+              >
+                <ShieldCheck size={15} />
+                <span>{en ? "Continue with Anclora Identity" : "Continuar con Anclora Identity"}</span>
+              </a>
+            </div>
+          )}
 
           {/* Whitelist / Invitation Link */}
           <div className="auth-invite mt-3 flex items-center justify-between">

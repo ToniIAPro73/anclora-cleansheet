@@ -43,6 +43,11 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     display_name = Column(String(255), nullable=True)
     status = Column(String(20), nullable=False, default="active", server_default="active")  # active | disabled
+    # Anclora Identity `sub` claim once this local account has completed an
+    # OIDC login. Nullable: password-only accounts keep working unchanged.
+    # Linking never creates a new user row — see routes/anclora_identity.py —
+    # it only annotates an existing, whitelist-provisioned one.
+    identity_sub = Column(String(255), unique=True, nullable=True, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

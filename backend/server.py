@@ -7,6 +7,8 @@ from models import init_db
 
 # Import domain route modules
 from routes.auth import router as auth_router
+from routes.anclora_identity import router as anclora_identity_router
+import anclora_identity_oidc
 from routes.files import router as files_router
 from routes.recipes import router as recipes_router
 from routes.batch import router as batch_router
@@ -30,6 +32,7 @@ api_router = APIRouter(prefix="/api")
 
 # Register domain sub-routers under /api
 api_router.include_router(auth_router)
+api_router.include_router(anclora_identity_router)
 api_router.include_router(files_router)
 api_router.include_router(recipes_router)
 api_router.include_router(batch_router)
@@ -59,3 +62,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if anclora_identity_oidc.ANCLORA_IDENTITY_ENABLED:
+    # Scoped strictly to the OIDC authorization-code round trip (state/nonce
+    # storage for Authlib's Starlette client) — this is not a general
+    # application session, does not carry auth state, and expires long before
+    # the actual access/refresh token cookies issued after a successful
+    # callback. Distinct cookie name so it can never be confused with them.
+    from starlette.middleware.sessions import SessionMiddleware
+
+    _oidc_session_secret = os.environ.get("ANCLORA_IDENTITY_SESSION_SECRET")
+    if not _oidc_session_secret:
+        raise RuntimeError("ANCLORA_IDENTITY_ENABLED=true requires ANCLORA_IDENTITY_SESSION_SECRET to be set")
+    app.add_middleware(
+        SessionMiddleware,
+        secret_key=_oidc_session_secret,
+        session_cookie="cleansheet_oidc_handshake",
+        max_age=600,
+        same_site="lax",
+        https_only=(os.environ.get("APP_ENV", "development").lower() == "production"),
+    )
