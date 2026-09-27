@@ -39,6 +39,7 @@ import MetricCard from "./components/dashboard/MetricCard";
 import QuickActionCard from "./components/dashboard/QuickActionCard";
 import RecentActivityList from "./components/dashboard/RecentActivityList";
 import SecondaryPanel from "./components/dashboard/SecondaryPanel";
+import WorkspaceSidebar, { MobileWorkspaceNav } from "./components/dashboard/WorkspaceSidebar";
 
 const listUnique = (arr) => Array.from(new Set(arr));
 
@@ -105,13 +106,12 @@ export function CleanSheetApp() {
       data-testid="app-root-container"
       className="min-h-screen flex flex-col font-sans transition-colors duration-200 dark:bg-[#080D18] bg-slate-50 text-slate-900 dark:text-slate-100 selection:bg-[#38BDF8]/30 selection:text-white"
     >
-      <Header
-        t={t}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      <Header t={t} />
+      <MobileWorkspaceNav t={t} activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="flex min-h-0 flex-1">
+        <WorkspaceSidebar t={t} activeTab={activeTab} setActiveTab={setActiveTab} />
+        <main className="min-w-0 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {activeTab === "clean" && (
           <>
             {/* Operational Dashboard Overview (default landing state on /app) */}
@@ -475,7 +475,8 @@ export function CleanSheetApp() {
         )}
 
         {activeTab === "history" && <HistoryView t={t} />}
-      </main>
+        </main>
+      </div>
 
       <footer className="w-full border-t border-slate-200 dark:border-slate-800/80 py-6 text-center text-xs text-slate-400 dark:text-slate-500">
         <p>Anclora CleanSheet © 2026. Normalización determinista y reproducible.</p>
