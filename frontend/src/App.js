@@ -1,10 +1,21 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { debounce } from "lodash";
+import {
+  UploadCloud,
+  PlayCircle,
+  Layers,
+  Webhook,
+  Cloud,
+  History as HistoryIcon,
+  CalendarClock,
+  ShieldCheck
+} from "lucide-react";
 import { AuthProvider } from "./context/AuthContext";
 import { UIProvider, useUI } from "./context/UIContext";
 import { translations } from "./i18n";
 import { api } from "./lib/api";
+import { useDashboardOverview } from "./hooks/useDashboardOverview";
 
 import Header from "./components/Header";
 import DropZone from "./components/DropZone";
@@ -23,6 +34,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./components/Landing";
 import Login from "./components/Login";
 import ActivateAccess from "./components/ActivateAccess";
+import PageHeader from "./components/dashboard/PageHeader";
+import MetricCard from "./components/dashboard/MetricCard";
+import QuickActionCard from "./components/dashboard/QuickActionCard";
+import RecentActivityList from "./components/dashboard/RecentActivityList";
+import SecondaryPanel from "./components/dashboard/SecondaryPanel";
 
 const listUnique = (arr) => Array.from(new Set(arr));
 
@@ -41,6 +57,7 @@ export function CleanSheetApp() {
   const [isRecalculating, setIsRecalculating] = useState(false);
 
   const t = translations[lang] || translations.es;
+  const overview = useDashboardOverview();
 
   const handleAnalysisComplete = ({ fileInfo, analysisData }) => {
     setCurrentFile(fileInfo);
@@ -97,25 +114,242 @@ export function CleanSheetApp() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {activeTab === "clean" && (
           <>
-            {/* Hero / Upload Workspace */}
+            {/* Operational Dashboard Overview (default landing state on /app) */}
             {!currentFile ? (
-              <div className="space-y-6 pt-4 text-center">
-                <div className="max-w-2xl mx-auto space-y-2">
-                  <h1
-                    data-testid="hero-main-title"
-                    className="text-3xl sm:text-4xl font-extrabold tracking-tight dark:text-white text-slate-950"
+              <div className="space-y-8">
+                <PageHeader
+                  title={t.brand_name}
+                  subtitle={t.subtitle}
+                  status={t.dashboard.status_ready}
+                />
+
+                {/* Overview row: real counts derived from already-fetched API data; a
+                    metric is simply omitted when its backing fetch failed. */}
+                {(() => {
+                  const d = t.dashboard;
+                  const metrics = [
+                    overview.executions !== null && {
+                      icon: HistoryIcon,
+                      label: d.metric_executions,
+                      value: overview.executions.length,
+                      testId: "metric-executions"
+                    },
+                    overview.recipes !== null && {
+                      icon: PlayCircle,
+                      label: d.metric_recipes,
+                      value: overview.recipes.length,
+                      testId: "metric-recipes"
+                    },
+                    overview.automations !== null && {
+                      icon: Webhook,
+                      label: d.metric_automations,
+                      value: overview.automations.length,
+                      testId: "metric-automations"
+                    },
+                    overview.connectors !== null && {
+                      icon: Cloud,
+                      label: d.metric_connectors,
+                      value: overview.connectors.length,
+                      testId: "metric-connectors"
+                    },
+                    overview.schedules !== null && {
+                      icon: CalendarClock,
+                      label: d.metric_schedules,
+                      value: overview.schedules.length,
+                      testId: "metric-schedules"
+                    }
+                  ].filter(Boolean);
+
+                  if (metrics.length === 0) return null;
+
+                  return (
+                    <div
+                      data-testid="dashboard-metrics-row"
+                      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+                    >
+                      {metrics.map((m) => (
+                        <MetricCard key={m.testId} {...m} />
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Quick actions: wired to the existing tab-switch handler, no new logic */}
+                <div className="space-y-3">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    {t.dashboard.quick_actions_title}
+                  </h2>
+                  <div
+                    data-testid="dashboard-quick-actions"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
                   >
-                    {t.brand_name}
-                  </h1>
-                  <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 font-normal">
-                    {t.subtitle}
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 max-w-lg mx-auto">
-                    {t.tagline}
-                  </p>
+                    <QuickActionCard
+                      testId="quick-action-clean"
+                      icon={UploadCloud}
+                      label={t.dashboard.action_clean_label}
+                      description={t.dashboard.action_clean_desc}
+                      active
+                      onClick={() => setActiveTab("clean")}
+                    />
+                    <QuickActionCard
+                      testId="quick-action-recipes"
+                      icon={PlayCircle}
+                      label={t.dashboard.action_recipe_label}
+                      description={t.dashboard.action_recipe_desc}
+                      onClick={() => setActiveTab("recipes")}
+                    />
+                    <QuickActionCard
+                      testId="quick-action-batch"
+                      icon={Layers}
+                      label={t.dashboard.action_batch_label}
+                      description={t.dashboard.action_batch_desc}
+                      onClick={() => setActiveTab("batch")}
+                    />
+                    <QuickActionCard
+                      testId="quick-action-automations"
+                      icon={Webhook}
+                      label={t.dashboard.action_automation_label}
+                      description={t.dashboard.action_automation_desc}
+                      onClick={() => setActiveTab("automations")}
+                    />
+                    <QuickActionCard
+                      testId="quick-action-connectors"
+                      icon={Cloud}
+                      label={t.dashboard.action_connector_label}
+                      description={t.dashboard.action_connector_desc}
+                      onClick={() => setActiveTab("connectors")}
+                    />
+                  </div>
                 </div>
 
-                <DropZone t={t} onAnalysisComplete={handleAnalysisComplete} />
+                {/* Main content: recent activity + compact upload workspace */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                  <div className="lg:col-span-1">
+                    <RecentActivityList
+                      testId="dashboard-recent-activity"
+                      title={t.dashboard.recent_activity_title}
+                      items={(overview.executions || []).slice(0, 5)}
+                      emptyLabel={t.dashboard.recent_activity_empty}
+                      renderItem={(item) => (
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="font-medium dark:text-slate-200 text-slate-800 truncate">
+                              {item.file_name || "Archivo"}
+                            </div>
+                            <div className="text-[10px] text-slate-400">
+                              {item.created_at ? new Date(item.created_at).toLocaleString() : ""}
+                            </div>
+                          </div>
+                          <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30">
+                            {item.status || "ok"}
+                          </span>
+                        </div>
+                      )}
+                    />
+                    <button
+                      data-testid="dashboard-view-full-history"
+                      onClick={() => setActiveTab("history")}
+                      className="mt-2 w-full text-center px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[#38BDF8] hover:bg-[#3B82F6]/10 border border-transparent hover:border-[#3B82F6]/30 transition-colors cursor-pointer"
+                    >
+                      {t.dashboard.recent_activity_view_all}
+                    </button>
+                  </div>
+
+                  {/* Compact upload panel: same DropZone/analysis pipeline, shrunk into the workspace layout */}
+                  <div
+                    data-testid="dashboard-workspace-panel"
+                    className="lg:col-span-2 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 dark:bg-[#0B1220] bg-white space-y-3"
+                  >
+                    <div>
+                      <h3 className="text-sm font-bold dark:text-white text-slate-900">
+                        {t.dashboard.workspace_title}
+                      </h3>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {t.dashboard.workspace_subtitle}
+                      </p>
+                    </div>
+                    <DropZone t={t} onAnalysisComplete={handleAnalysisComplete} />
+                  </div>
+                </div>
+
+                {/* Secondary: compact panels reusing already-fetched connectors/schedules data */}
+                <div className="space-y-3">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    {t.dashboard.secondary_title}
+                  </h2>
+                  <div
+                    data-testid="dashboard-secondary-row"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+                  >
+                    <SecondaryPanel
+                      testId="secondary-connectors"
+                      icon={Cloud}
+                      title={t.dashboard.secondary_connectors_title}
+                      action={
+                        <button
+                          onClick={() => setActiveTab("connectors")}
+                          className="text-[10px] font-semibold text-[#38BDF8] hover:underline cursor-pointer"
+                        >
+                          {t.dashboard.secondary_connectors_cta}
+                        </button>
+                      }
+                    >
+                      {overview.connectors === null || overview.connectors.length === 0 ? (
+                        <p>{t.dashboard.secondary_connectors_empty}</p>
+                      ) : (
+                        <ul className="space-y-1">
+                          {overview.connectors.slice(0, 3).map((c) => (
+                            <li key={c.id} className="truncate">
+                              {c.name || c.bucket || `Conector #${c.id}`}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </SecondaryPanel>
+
+                    <SecondaryPanel
+                      testId="secondary-schedules"
+                      icon={CalendarClock}
+                      title={t.dashboard.secondary_schedules_title}
+                      action={
+                        <button
+                          onClick={() => setActiveTab("schedules")}
+                          className="text-[10px] font-semibold text-[#38BDF8] hover:underline cursor-pointer"
+                        >
+                          {t.dashboard.secondary_schedules_cta}
+                        </button>
+                      }
+                    >
+                      {overview.schedules === null || overview.schedules.length === 0 ? (
+                        <p>{t.dashboard.secondary_schedules_empty}</p>
+                      ) : (
+                        <ul className="space-y-1">
+                          {overview.schedules.slice(0, 3).map((s) => (
+                            <li key={s.id} className="truncate">
+                              {s.name || `Programación #${s.id}`}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </SecondaryPanel>
+
+                    <SecondaryPanel
+                      testId="secondary-audit"
+                      icon={ShieldCheck}
+                      title={t.dashboard.secondary_audit_title}
+                      action={
+                        <button
+                          onClick={() => setActiveTab("history")}
+                          className="text-[10px] font-semibold text-[#38BDF8] hover:underline cursor-pointer"
+                        >
+                          {t.dashboard.secondary_audit_cta}
+                        </button>
+                      }
+                    >
+                      <p>{t.dashboard.secondary_audit_desc}</p>
+                    </SecondaryPanel>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="space-y-6">
