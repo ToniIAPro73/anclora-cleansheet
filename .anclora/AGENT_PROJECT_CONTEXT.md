@@ -64,7 +64,7 @@ Repository-specific runtime minima are defined in [`PRODUCTION_RUNTIME.md`](PROD
 - Keep `backend/.env` and `frontend/.env` local-only with mode `0600`; commit only `.env.example` files.
 - Do not add product behavior, database migrations, seed data, or destructive cleanup as part of governance bootstrap.
 - QA identities must be dedicated test identities; no personal account is a QA account.
-- Keep the contractual branch flow `development -> staging -> production -> main`; never force-push.
+- Default to the contractual branch flow `development -> staging -> production -> main` without automatic promotion. An explicit current-task user request may authorize a gated repository-supported promotion; never force-push.
 
 ## Known bootstrap gaps
 
