@@ -167,6 +167,8 @@ PROMOTION_OLD_AUTHORIZATION_PERSISTS=false
 
 QA_AUTH_MODEL=DEDICATED_USER
 QA_USER_EMAIL=qa.cleansheet@anclora.local
+QA_DATA_ISOLATION_MODEL=USER_OWNED_RECORDS
+QA_WRITE_SCOPE=authenticated QA user records only; never query or mutate another owner's records
 QA_PERSISTENT_IDENTITY=qa.cleansheet@anclora.local
 QA_REUSE=true
 QA_DELETE_AFTER_TEST=false
