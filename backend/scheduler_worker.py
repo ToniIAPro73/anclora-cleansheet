@@ -15,7 +15,7 @@ from scheduler_utils import calculate_next_runs
 logger = logging.getLogger("cleansheet.scheduler_worker")
 
 # Portable worker settings. All values can be overridden by the process environment.
-POLL_INTERVAL_SECONDS = max(float(os.environ.get("SCHEDULER_POLL_INTERVAL_SECONDS", "5")), 0.1)
+POLL_INTERVAL_SECONDS = max(float(os.environ.get("SCHEDULER_POLL_INTERVAL_SECONDS", "3600")), 0.1)
 BUSY_INTERVAL_SECONDS = max(float(os.environ.get("SCHEDULER_BUSY_INTERVAL_SECONDS", "1")), 0.1)
 LEASE_DURATION_SECONDS = max(int(os.environ.get("SCHEDULER_LEASE_SECONDS", "180")), 1)
 

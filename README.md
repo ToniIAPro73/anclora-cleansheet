@@ -43,8 +43,10 @@ python scheduler_worker.py
 ```
 
 El worker admite `SCHEDULER_POLL_INTERVAL_SECONDS`, `SCHEDULER_BUSY_INTERVAL_SECONDS` y
-`SCHEDULER_LEASE_SECONDS`. Las automatizaciones persistidas en SQLAlchemy son la fuente
-canónica; los webhooks y el worker comparten leases e idempotencia.
+`SCHEDULER_LEASE_SECONDS`. Por defecto, consulta nuevas automatizaciones vencidas cada hora
+(hasta una hora de retraso); el intervalo se puede sobrescribir con
+`SCHEDULER_POLL_INTERVAL_SECONDS`. Las automatizaciones persistidas en SQLAlchemy son la
+fuente canónica; los webhooks y el worker comparten leases e idempotencia.
 
 ---
 
