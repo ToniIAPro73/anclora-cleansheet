@@ -73,7 +73,7 @@ Repository-specific runtime minima are defined in [`PRODUCTION_RUNTIME.md`](PROD
 - No dedicated QA account contract or browser QA harness is present in this repository.
 - The runtime can use configured PostgreSQL via `DATABASE_URL`, but the checked-in code defaults to SQLite when unset.
 
-<!-- ANCLORA-MODS:START -->
-ANCLORA_MODS_COMMON_CONTRACT_VERSION=1.0.0
-Canonical shared rules: [Anclora Common Agent Contract](../anclora-mods/contracts/ANCLORA_COMMON_AGENT_CONTRACT_V1.md) and [Flow Amendment v2](../anclora-mods/ANCLORA_FLUJO_UNICO_V2.md). Repository-specific facts remain in this repository's `.anclora/` contracts.
-<!-- ANCLORA-MODS:END -->
+<!-- ANCLORA-AOS:START -->
+ANCLORA_AOS_AUTHORITY=anclora-governance
+Canonical rules: [AOS Adoption Standard](../../anclora-governance/standards/AOS_ADOPTION_STANDARD.md). Repository-specific facts remain in this repository's `.anclora/` contracts.
+<!-- ANCLORA-AOS:END -->

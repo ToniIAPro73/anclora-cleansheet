@@ -1,20 +1,25 @@
-# Checklist de validación — CleanSheet
+# Checklist de validación — adopción AOS canónica (2026-10-30)
 
-**Cambio:** se retiró el healthcheck Docker que consultaba Neon cada 30 s y se amplió a 1 hora el intervalo predeterminado de consulta del worker cuando no hay automatizaciones vencidas. Una automatización nueva puede comenzar con hasta una hora de retraso. El valor puede configurarse con `SCHEDULER_POLL_INTERVAL_SECONDS`.
+> Se sobrescribe en cada entrega; el historial queda en Git.
 
-**Rama:** `development`
-**Validación en desarrollo por Toni:** confirmada
-**Preview del SHA publicado:** pendiente
-**Promoción:** solicitada con `PROMOTE=FULL`; ejecutar después de la revisión en Preview.
+**Repositorio:** anclora-cleansheet
+**Rama:** development
+**Datos:** no se usaron ni modificaron datos de aplicación.
 
-## Verificación del agente
+## 1. Qué cambia
+- Bootstrap mínimo (`AGENTS.md`, adaptadores de proveedor) y contratos `.anclora/` alineados con el modelo AOS ratificado (D-2026-0042): autoridad en Governance, router mínimo, claves Preview heredadas retiradas, semántica de runtime derivada de hechos ya declarados.
+- Copias de contratos sincronizadas desde Vault (9 ficheros).
+- Sin cambios de código de producto, dependencias ni despliegue.
 
-- `git diff --check`: PASS.
-- Tests, lint y build: no ejecutados; no solicitados para este cambio localizado de configuración y documentación.
-- No se consultaron ni modificaron datos de aplicación.
+## 2. Ya comprobado por el agente
+| Comprobación | Resultado |
+| --- | --- |
+| `aos-adopt` inspect/plan/apply, diff limitado a ficheros contractuales | PASS |
+| `runtime_semantics.py` sobre `.anclora/PRODUCTION_RUNTIME.md` | PASS |
+| Enlaces a Governance en los `.md` modificados, `git diff --check` | PASS |
 
-## Revisión de Toni
+## 3. NOT_RUN
+Tests, lint, typecheck, build y E2E de la aplicación: el diff es solo documentación/configuración contractual.
 
-- [x] Validado en desarrollo.
-- [ ] Revisar en Preview el SHA publicado y confirmar que el worker respeta el intervalo esperado.
-- [ ] Tras validar Preview, ejecutar `PROMOTE=FULL`.
+## 4. Para Toni
+Sin pasos manuales. Bloqueante: no.
