@@ -104,8 +104,13 @@ isolated deterministic tests and is not the human development runtime.
 ## Database and migrations
 
 DATABASE_PROVIDER=Neon PostgreSQL
+DATABASE_TARGET_FINGERPRINT=sha256:dfe112bd555f2e84579644f59f337704f98b4f243a1122332f582a8fc643fc62
 ORM=SQLAlchemy 2.x
 MIGRATION_SYSTEM=Alembic
+MIGRATION_DIRECTORY=./backend/alembic/versions
+MIGRATION_RUNNER_WORKFLOW=.github/workflows/production-migrations.yml
+MIGRATION_ENVIRONMENT=production-migrations
+MIGRATION_CRYPTO_ATTESTATION=required
 PRODUCTION_MIGRATIONS_ALLOWED=true
 MIGRATION_CONFIRMATION_REQUIRED=true
 
