@@ -50,6 +50,13 @@ fuente canónica; los webhooks y el worker comparten leases e idempotencia.
 
 ---
 
+### Endpoint de salud (`/api/health`)
+
+Neon (plan Free) suspende el cómputo tras 5 min sin actividad; una sonda que consulte la BD en cada llamada lo mantiene despierto.
+
+- `GET /api/health` (ligero, por defecto): **no toca la BD**; devuelve `"database": "skipped"`. Úsalo en healthchecks, proxy y monitores.
+- `GET /api/health?deep=1` (o `deep=true`): ejecuta `SELECT 1`; 503 si la BD falla. Solo para verificaciones puntuales, nunca como sonda periódica.
+
 ## 4. Heurísticas Implementadas
 1. **Detección de Filas de Título / Banners**: Identifica saltos de densidad para saltar encabezados de reportes.
 2. **Cabeceras Multinivel**: Detecta categorías agrupadas y subcabeceras, aplanándolas deterministamente (`Ventas_Neto`).
